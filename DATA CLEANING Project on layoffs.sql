@@ -10,47 +10,47 @@ SELECT * FROM layoffs;
 
 -- 1. Removing Duplicates
 
-create table layoffs_staging
-like layoffs;
+CREATE TABLE layoffs_staging
+LIKE layoffs;
 
-select * 
-from layoffs_staging;
+SELECT * 
+FROM layoffs_staging;
 
-insert  into layoffs_staging
-select *
-from layoffs;
+INSERT  INTO layoffs_staging
+SELECT *
+FROM layoffs;
 
-select *, 
+SELECT *, 
 row_number() OVER(
-PARTITION BY company, industry, total_laid_off, `date`) as row_num
-from layoffs_staging;
+PARTITION BY company, industry, total_laid_off, `date`) AS row_num
+FROM layoffs_staging;
 
-WITH duplicate_cte as 
-( select *, 
+WITH duplicate_cte AS 
+( SELECT *, 
 row_number() OVER(
 PARTITION BY company, location,
  industry, total_laid_off,
  percentage_laid_off, `date`, stage, 
- country, funds_raised_millions) as row_num
-from layoffs_staging
+ country, funds_raised_millions) AS row_num
+FROM layoffs_staging
 )
 SELECT * 
 FROM duplicate_cte
 WHERE row_num>1;
 
-select *
-from layoffs
-where company = 'Casper';
+SELECT *
+FROM layoffs
+WHERE company = 'Casper';
 
 
-WITH duplicate_cte as 
-( select *, 
+WITH duplicate_cte AS 
+( SELECT *, 
 row_number() OVER(
 PARTITION BY company, location,
  industry, total_laid_off,
  percentage_laid_off, `date`, stage, 
- country, funds_raised_millions) as row_num
-from layoffs_staging
+ country, funds_raised_millions) AS row_num
+FROM layoffs_staging
 )
 DELETE                  # this is not gonna work  
 FROM duplicate_cte
@@ -70,41 +70,41 @@ CREATE TABLE `layoffs_staging2` (
   `row_num` INT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-select * 
-from layoffs_staging2;
+SELECT * 
+FROM layoffs_staging2;
 
 INSERT INTO layoffs_staging2
-select *, 
+SELECT *, 
 row_number() OVER(
 PARTITION BY company, location,
  industry, total_laid_off,
  percentage_laid_off, `date`, stage, 
- country, funds_raised_millions) as row_num
-from layoffs_staging; 
+ country, funds_raised_millions) AS row_num
+FROM layoffs_staging; 
 
-select * 
-from layoffs_staging2
+SELECT * 
+FROM layoffs_staging2
 WHERE row_num >1;
 
 DELETE
-from layoffs_staging2
+FROM layoffs_staging2
 WHERE row_num > 1;
 
 
 -- 2. Standardizing Data 
 
 SELECT company , TRIM(company)
-from layoffs_staging2;
+FROM layoffs_staging2;
 
 UPDATE layoffs_staging2
 SET company = TRIM(company);
 
 SELECT DISTINCT industry 
-from layoffs_staging2
-order by 1;
+FROM layoffs_staging2
+ORDER BY 1;
 
 SELECT *
-from layoffs_staging2
+FROM layoffs_staging2
 WHERE industry LIKE 'Crypto%';
 
 UPDATE layoffs_staging2
@@ -112,30 +112,30 @@ SET industry = 'Crypto'
 WHERE industry LIKE 'Crypto%';
 
 SELECT DISTINCT location 
-from layoffs_staging2
-order by 1;
+FROM layoffs_staging2
+ORDER BY 1;
 
 SELECT DISTINCT country
-from layoffs_staging2
-order by 1;
+FROM layoffs_staging2
+ORDER BY 1;
 
 SELECT *
-from layoffs_staging2
+FROM layoffs_staging2
 WHERE country LIKE 'United States%'
-order by 1;
+ORDER BY 1;
 
 UPDATE layoffs_staging2
 SET country = 'United States'
-WHERE country LIKE 'United States%'; #this also can work but not professionaly
+WHERE country LIKE 'United States%';    #this also can work but not professionaly
 
 
 SELECT DISTINCT country, TRIM(country)
-from layoffs_staging2
-order by 1;
+FROM layoffs_staging2
+ORDER BY 1;
 
- SELECT DISTINCT country, TRIM(TRAILING '.' FROM country)
-from layoffs_staging2
-order by 1;
+SELECT DISTINCT country, TRIM(TRAILING '.' FROM country)
+FROM layoffs_staging2
+ORDER BY 1;
 
 UPDATE layoffs_staging2
 SET country = TRIM(TRAILING '.' FROM country)
@@ -173,9 +173,9 @@ SELECT *
 FROM layoffs_staging2
 WHERE company = 'Airbnb';
 
- SELECT * 
- FROM layoffs_staging2 as t1
- JOIN layoffs_staging2 as t2
+SELECT * 
+ FROM layoffs_staging2 AS t1
+ JOIN layoffs_staging2 AS t2
 	ON t1.company = t2.company
     AND t1.location = t2.location
 WHERE ( t1.industry IS NULL OR t1.industry = '') 
@@ -183,8 +183,8 @@ AND t2.industry IS NOT NULL;
 
 
  SELECT t1.industry, t2.industry
- FROM layoffs_staging2 as t1
- JOIN layoffs_staging2 as t2
+ FROM layoffs_staging2 AS t1
+ JOIN layoffs_staging2 AS t2
 	ON t1.company = t2.company
     AND t1.location = t2.location
 WHERE ( t1.industry IS NULL OR t1.industry = '') 
